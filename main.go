@@ -4,6 +4,7 @@ import ( "fmt"
 "os"
 "bufio"
 "strings"
+"time"
 
 )
 var tasks []Task
@@ -12,7 +13,7 @@ type Task struct {
 	ID int
 	Title string
 	Completed bool
-	DueDate string
+    DueDate time.Time
 	Deleted bool
 
 }
@@ -30,18 +31,23 @@ func getNextID() int {
 
 func main(){
 	loadTasks()
+	// addTask(title, due)
+    // saveTasks()
+	showDueAlerts()
 	scanner := bufio.NewScanner(os.Stdin)
 
- for {
-	fmt.Println("\nTodo App")
-	fmt.Println("1. Add Task")
-	fmt.Println("2. List Tasks")
-	fmt.Println("3. Complete Tasks")
-	fmt.Println("4. Delete task")
-	fmt.Println("5. Edit Task")
-	fmt.Println("6. Search Task")
-	fmt.Println("7. Undo Delete")
-    fmt.Println("8. Exit")
+for {
+fmt.Println("1. Add Task")
+fmt.Println("2. List All Tasks")
+fmt.Println("3. Show Pending Tasks")
+fmt.Println("4. Show Completed Tasks")
+fmt.Println("5. Show Deleted Tasks")
+fmt.Println("6. Complete Task")
+fmt.Println("7. Delete Task")
+fmt.Println("8. Edit Task")
+fmt.Println("9. Search Task")
+fmt.Println("10. Undo Delete")
+fmt.Println("11. Exit")
 
     fmt.Print("choose: ")
     scanner.Scan()
@@ -64,7 +70,19 @@ func main(){
 	case 2:
 		listTasks()
 
-	case 3:
+	// case 2:
+	// listTasks()
+
+case 3:
+	listPendingTasks()
+
+case 4:
+	listCompletedTasks()
+
+case 5:
+	listDeletedTasks()
+
+case 6:
 		var id int
 		fmt.Print("Task ID: ")
 		scanner.Scan()
@@ -73,7 +91,7 @@ func main(){
 		completeTask(id)
 		saveTasks()
 
-	case 4:
+case 7:
 		var id int
 		fmt.Print("Task ID: ")
 		scanner.Scan()
@@ -82,7 +100,7 @@ func main(){
 		deleteTask(id)
 		saveTasks()
 
-	case 5:
+case 8:
 		var id int
 		fmt.Print("Task ID: ")
 		scanner.Scan()
@@ -100,13 +118,13 @@ func main(){
 		}
 
 
-	case 6:
+case 9:
 		fmt.Println("Search Keyword: ")
 		scanner.Scan()
 		keyword:= strings.TrimSpace(scanner.Text())
 		searchTask(keyword)
 
-	case 7:
+case 10:
 		var id int
 		fmt.Println("Task ID to restore: ")
 		scanner.Scan()
@@ -120,20 +138,27 @@ func main(){
 		}
 
 
-	case 8:
+case 11:
 		fmt.Println("See you Later")
 		return
 	}
   }
 }
 
-func addTask(title string, dueDate string){
-	task := Task{
-		ID:getNextID(),
-		Title: title,
-		Completed: false,
-		DueDate: dueDate,
+func addTask(title string, dueDate string) {
+	due, err := time.Parse("2006-01-02", dueDate)
+	if err != nil {
+		fmt.Println("Invalid date format. Use YYYY-MM-DD")
+		return
 	}
+
+	task := Task{
+		ID:        getNextID(),
+		Title:     title,
+		Completed: false,
+		DueDate:   due,
+	}
+
 	tasks = append(tasks, task)
 }
 func editTask(id int, newTitle string) bool{
@@ -142,26 +167,60 @@ func editTask(id int, newTitle string) bool{
 			tasks[i].Title = newTitle
 			return true
 		}
-// 		if editTask(id, newTitle) {
-// 	saveTasks()
-// 	fmt.Println("Task updated")
-// } else {
-// 	fmt.Println("Task not found")
-// }
 	}
 	return false
 }
-func listTasks(){
+func listTasks() {
 	for _, task := range tasks {
+
+		if task.Deleted {
+			continue
+		}
+
 		status := " "
 		if task.Completed {
 			status = "✓"
 		}
+
 		fmt.Printf("[%s] %d - %s (Due: %s)\n",
-	status,
-    task.ID,
-    task.Title,
-    task.DueDate)
+			status,
+			task.ID,
+			task.Title,
+			task.DueDate.Format("2006-01-02"),
+		)
+	}
+}
+func listPendingTasks() {
+	for _, task := range tasks {
+		if !task.Completed && !task.Deleted {
+			fmt.Printf("[%d] %s (Due: %s)\n",
+				task.ID,
+				task.Title,
+				task.DueDate.Format("2006-01-02"),
+			)
+		}
+	}
+}
+func listCompletedTasks() {
+	for _, task := range tasks {
+		if task.Completed && !task.Deleted {
+			fmt.Printf("[✓] %d - %s (Due: %s)\n",
+				task.ID,
+				task.Title,
+				task.DueDate.Format("2006-01-02"),
+			)
+		}
+	}
+}
+func listDeletedTasks() {
+	for _, task := range tasks {
+		if task.Deleted {
+			fmt.Printf("[X] %d - %s (Due: %s)\n",
+				task.ID,
+				task.Title,
+				task.DueDate.Format("2006-01-02"),
+			)
+		}
 	}
 }
 func saveTasks(){
@@ -237,4 +296,20 @@ func searchTask(keyword string) {
 		fmt.Println("No matching tasks found")
 	}
 }
+func showDueAlerts() {
+	now := time.Now()
 
+	for _, task := range tasks {
+		if task.Deleted || task.Completed {
+			continue
+		}
+		if task.DueDate.Before(now){
+			fmt.Printf("OVERDUE: [%d] %s (Due: %s)\n",
+		task.ID,
+	task.Title,
+task.DueDate.Format("2006-01-02"),
+             )
+			}
+		}
+    }
+}
