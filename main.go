@@ -12,6 +12,8 @@ type Task struct {
 	ID int
 	Title string
 	Completed bool
+	DueDate string
+	Deleted bool
 
 }
 func getNextID() int {
@@ -38,7 +40,8 @@ func main(){
 	fmt.Println("4. Delete task")
 	fmt.Println("5. Edit Task")
 	fmt.Println("6. Search Task")
-    fmt.Println("7. Exit")
+	fmt.Println("7. Undo Delete")
+    fmt.Println("8. Exit")
 
     fmt.Print("choose: ")
     scanner.Scan()
@@ -51,7 +54,11 @@ func main(){
 		scanner.Scan()
 		title := strings.TrimSpace(scanner.Text())
 
-		addTask(title)
+		fmt.Print("Due Date (YYYY-MM-DD): ")
+		scanner.Scan()
+		due:= strings.TrimSpace(scanner.Text())
+
+		addTask(title, due)
 		saveTasks()
 
 	case 2:
@@ -100,18 +107,32 @@ func main(){
 		searchTask(keyword)
 
 	case 7:
+		var id int
+		fmt.Println("Task ID to restore: ")
+		scanner.Scan()
+		fmt.Sscanf(scanner.Text(), "%d", &id)
+
+		if undoDelete(id){
+			saveTasks()
+			fmt.Println("Task restored")
+		} else {
+			fmt.Println("Task not found or not deleted")
+		}
+
+
+	case 8:
 		fmt.Println("See you Later")
 		return
 	}
   }
 }
 
-func addTask(title string){
+func addTask(title string, dueDate string){
 	task := Task{
-		// ID: len(tasks) + 1,
 		ID:getNextID(),
 		Title: title,
 		Completed: false,
+		DueDate: dueDate,
 	}
 	tasks = append(tasks, task)
 }
@@ -136,10 +157,11 @@ func listTasks(){
 		if task.Completed {
 			status = "✓"
 		}
-		fmt.Printf("[%s] %d - %s\n",
+		fmt.Printf("[%s] %d - %s (Due: %s)\n",
 	status,
     task.ID,
-    task.Title)
+    task.Title,
+    task.DueDate)
 	}
 }
 func saveTasks(){
@@ -152,7 +174,6 @@ func saveTasks(){
 	if err != nil {
 		fmt.Println("Error writing file:",err )
 	}
-	// os.WriteFile("tasks.json", data, 0644)
 }
 func completeTask(id int) bool {
 	for i:= range tasks {
@@ -166,7 +187,17 @@ func completeTask(id int) bool {
 func deleteTask(id int) bool {
 	for i, task := range tasks {
 		if task.ID == id {
-			tasks = append(tasks[:i], tasks[i+1:]...)
+			// tasks = append(tasks[:i], tasks[i+1:]...)
+			tasks[i].Deleted = true
+			return true
+		}
+	}
+	return false
+}
+func undoDelete(id int) bool {
+	for i := range tasks {
+		if tasks[i].ID == id && tasks[i].Deleted {
+			tasks[i].Deleted = false
 			return true
 		}
 	}
