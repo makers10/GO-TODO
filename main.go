@@ -12,6 +12,18 @@ type Task struct {
 	ID int
 	Title string
 	Completed bool
+
+}
+func getNextID() int {
+    maxID := 0
+
+    for _, task := range tasks {
+        if task.ID > maxID {
+            maxID = task.ID
+        }
+    }
+
+    return maxID + 1
 }
 
 func main(){
@@ -75,7 +87,8 @@ func main(){
 // var tasks []Task
 func addTask(title string){
 	task := Task{
-		ID: len(tasks) + 1,
+		// ID: len(tasks) + 1,
+		ID:getNextID(),
 		Title: title,
 		Completed: false,
 	}
