@@ -262,13 +262,24 @@ func undoDelete(id int) bool {
 	}
 	return false
 }
-func loadTasks(){
+// func loadTasks(){
+// 	data, err := os.ReadFile("tasks.json")
+// 	if err != nil {
+// 		return
+// 	}
+// 	json.Unmarshal(data, &tasks)
+//   }
+func loadTasks() {
 	data, err := os.ReadFile("tasks.json")
 	if err != nil {
 		return
 	}
-	json.Unmarshal(data, &tasks)
-  }
+
+	err = json.Unmarshal(data, &tasks)
+	if err != nil {
+		fmt.Println("Error loading tasks:", err)
+	}
+}
 func searchTask(keyword string) {
 	found := false
 
@@ -303,13 +314,13 @@ func showDueAlerts() {
 		if task.Deleted || task.Completed {
 			continue
 		}
-		if task.DueDate.Before(now){
+
+		if task.DueDate.Before(now) {
 			fmt.Printf("OVERDUE: [%d] %s (Due: %s)\n",
-		task.ID,
-	task.Title,
-task.DueDate.Format("2006-01-02"),
-             )
-			}
+				task.ID,
+				task.Title,
+				task.DueDate.Format("2006-01-02"),
+			)
 		}
-    }
+	}
 }
