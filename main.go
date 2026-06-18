@@ -168,13 +168,6 @@ func main() {
 		case 15:
 	    exportTasks()
 
-		recurrence {
-        case "daily", "weekly", "monthly", "none":
-	// valid
-        default:
-	    fmt.Println("Invalid recurrence")
-	    return
-
 
 		case 11:
 			fmt.Println("See you Later")
@@ -227,7 +220,7 @@ func listTasks() {
 			status,
 			task.ID,
 			task.Title,
-			task.Category,
+			// task.Category,
 			task.DueDate.Format("2006-01-02"),
 		)
 	}
@@ -280,22 +273,21 @@ func listTodayTasks() {
 		}
 		if task.DueDate.Format("2006-01-02") == today {
 			status := " "
-			if task.DueDate.Format("2006-01-02") == today {
-
+			if task.Completed {
 				status = "✓"
 			}
-			fmt.Println("[%s] %d - %s\n",
-				status,
-				task.ID,
-				task.Title,
-			)
+			fmt.Printf("[%s] %d - %s\n",
+	status,
+	task.ID,
+	task.Title,
+)
 			found = true
 		}
 	}
 	if !found {
 		fmt.Println("Sad!No Tasks Due Today.")
 	}
-	fmt.Println("==========================\n")
+	// fmt.Println(" hello\n")
 }
 func listTasksByCategory(category string) {
 	found := false
