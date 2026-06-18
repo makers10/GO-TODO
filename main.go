@@ -18,6 +18,7 @@ type Task struct {
 	DueDate   time.Time
 	Deleted   bool
 	Category  string
+	Recurrence string
 }
 
 func getNextID() int {
@@ -75,7 +76,11 @@ func main() {
 			scanner.Scan()
 			category := strings.TrimSpace(scanner.Text())
 
-			addTask(title, due, category)
+			fmt.Print("Recurrence (e.g., daily, weekly): ")
+			scanner.Scan()
+			recurrence := strings.TrimSpace(scanner.Text())
+
+			addTask(title, due, category, recurrence)
 			saveTasks()
 
 		case 2:
@@ -163,6 +168,14 @@ func main() {
 		case 15:
 	    exportTasks()
 
+		recurrence {
+        case "daily", "weekly", "monthly", "none":
+	// valid
+        default:
+	    fmt.Println("Invalid recurrence")
+	    return
+
+
 		case 11:
 			fmt.Println("See you Later")
 			return
@@ -171,7 +184,7 @@ func main() {
 	}
 }
 
-func addTask(title string, dueDate string, category string) {
+func addTask(title string, dueDate string, category string, recurrence string) {
 	due, err := time.Parse("2006-01-02", dueDate)
 	if err != nil {
 		fmt.Println("Invalid date format. Use YYYY-MM-DD")
@@ -184,6 +197,7 @@ func addTask(title string, dueDate string, category string) {
 		Completed: false,
 		DueDate:   due,
 		Category:  category,
+		Recurrence: recurrence,
 	}
 
 	tasks = append(tasks, task)
@@ -329,11 +343,21 @@ func saveTasks() {
 }
 func completeTask(id int) bool {
 	for i := range tasks {
+
 		if tasks[i].ID == id {
+
 			tasks[i].Completed = true
+
+			if tasks[i].Recurrence != "" &&
+				tasks[i].Recurrence != "none" {
+
+				createNextRecurringTask(tasks[i])
+			}
+
 			return true
 		}
 	}
+
 	return false
 }
 func deleteTask(id int) bool {
@@ -515,5 +539,29 @@ func exportCSV() {
 	}
 
 	fmt.Println("CSV exported successfully!")
+}
+func createNextRecurringTask(task Task) {
+
+	newTask := task
+
+	newTask.ID = getNextID()
+	newTask.Completed = false
+
+	switch task.Recurrence {
+
+	case "daily":
+		newTask.DueDate = task.DueDate.AddDate(0, 0, 1)
+
+	case "weekly":
+		newTask.DueDate = task.DueDate.AddDate(0, 0, 7)
+
+	case "monthly":
+		newTask.DueDate = task.DueDate.AddDate(0, 1, 0)
+
+	default:
+		return
+	}
+
+	tasks = append(tasks, newTask)
 }
 
